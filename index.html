@@ -45,12 +45,9 @@
         <title></title>
     </head>
     <body>
-<div id="filter-container" style="position: absolute; top: 10px; left: 50px; z-index: 999; background: white; padding: 10px; border: 1px solid #ccc;">
-  <label for="keteranganFilter">Filter SPPG:</label>
-  <select id="keteranganFilter">
-    <option value="">Tampilkan Semua</option>
-    <!-- Opsi akan diisi dinamis -->
-  </select>
+<div id="search-container" style="position: absolute; top: 10px; left: 50px; z-index: 1000; background: white; padding: 5px; border: 1px solid #ccc;">
+  <input type="text" id="featureSearch" placeholder="SPPG..." style="width: 200px; padding: 4px;">
+  <ul id="searchResults" style="list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; display: none; background: white; border: 1px solid #ccc;"></ul>
 </div>
         <div id="map">
             <div id="popup" class="ol-popup">
@@ -71,47 +68,70 @@
         <script src="./resources/Autolinker.min.js"></script>
         <script src="./resources/qgis2web.js"></script>
 <script>
-  // Pastikan layer sudah dimuat
-  var keteranganLayer = layersList.find(l => l.get('title') === 'KeteranganMBG');
-  var vectorSource = keteranganLayer.getSource();
+  <script>
+  const keteranganLayer = layersList.find(l => l.get('title') === 'KeteranganMBG');
+  const source = keteranganLayer.getSource();
+  const features = source.getFeatures();
 
-  // Ambil semua nilai unik dari atribut 'Keterangan'
-  function getUniqueKeteranganValues() {
-    const features = vectorSource.getFeatures();
-    const values = new Set();
+  const input = document.getElementById('featureSearch');
+  const results = document.getElementById('searchResults');
+
+  function clearResults() {
+    results.innerHTML = '';
+    results.style.display = 'none';
+  }
+
+  function showResults(matches) {
+    results.innerHTML = '';
+    matches.forEach(f => {
+      const li = document.createElement('li');
+      li.textContent = f.get('Keterangan');
+      li.style.padding = '5px';
+      li.style.cursor = 'pointer';
+      li.onmouseover = () => li.style.background = '#f0f0f0';
+      li.onmouseout = () => li.style.background = 'white';
+      li.onclick = () => {
+        clearResults();
+        input.value = f.get('Keterangan');
+        zoomToFeature(f);
+        filterToSingleFeature(f);
+      };
+      results.appendChild(li);
+    });
+    results.style.display = 'block';
+  }
+
+  function zoomToFeature(feature) {
+    const extent = feature.getGeometry().getExtent();
+    map.getView().fit(extent, { duration: 800, padding: [50, 50, 50, 50] });
+  }
+
+  function filterToSingleFeature(selectedFeature) {
     features.forEach(f => {
-      const val = f.get('Keterangan');
-      if (val) values.add(val);
-    });
-    return Array.from(values);
-  }
-
-  // Buat filter dropdown
-  function populateFilterOptions() {
-    const select = document.getElementById('keteranganFilter');
-    const options = getUniqueKeteranganValues();
-    options.forEach(value => {
-      const option = document.createElement('option');
-      option.value = value;
-      option.textContent = value;
-      select.appendChild(option);
+      f.setStyle(f === selectedFeature ? null : new ol.style.Style(null)); // Tampilkan hanya yang dipilih
     });
   }
 
-  // Terapkan filter ke layer
-  function applyFilter() {
-    const selected = document.getElementById('keteranganFilter').value;
-    vectorSource.getFeatures().forEach(feature => {
-      const show = !selected || feature.get('Keterangan') === selected;
-      feature.setStyle(show ? null : new ol.style.Style(null)); // sembunyikan fitur
-    });
-  }
+  input.addEventListener('input', () => {
+    const term = input.value.trim().toLowerCase();
+    if (!term) {
+      clearResults();
+      features.forEach(f => f.setStyle(null)); // Tampilkan semua fitur kembali
+      return;
+    }
+    const matches = features.filter(f => f.get('Keterangan')?.toLowerCase().includes(term));
+    if (matches.length > 0) {
+      showResults(matches);
+    } else {
+      clearResults();
+    }
+  });
 
-  // Inisialisasi setelah halaman dimuat penuh
-  window.onload = function () {
-    populateFilterOptions();
-    document.getElementById('keteranganFilter').addEventListener('change', applyFilter);
-  };
-        </script>
+  document.addEventListener('click', (e) => {
+    if (!document.getElementById('search-container').contains(e.target)) {
+      clearResults();
+    }
+  });
+</script>
     </body>
 </html>
