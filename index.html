@@ -69,51 +69,52 @@
         <script src="styles/DesaKabBandung_1_style.js"></script><script src="styles/BufferMBG_2_style.js"></script><script src="styles/KeteranganMBG_3_style.js"></script><script src="styles/SPPGMBG_4_style.js"></script>
         <script src="./layers/layers.js" type="text/javascript"></script> 
         <script src="./resources/Autolinker.min.js"></script>
-        <script src="./resources/qgis2web.js">
-const searchBox = document.getElementById("searchBox");
-const searchResults = document.getElementById("searchResults");
+        <script src="./resources/qgis2web.js"></script>
+<script>
+  const searchBox = document.getElementById("searchBox");
+  const searchResults = document.getElementById("searchResults");
 
-let keteranganList = [];
-let sekolahLayer = layer_KeteranganMBG_3; // ganti sesuai nama layer kamu
+  let keteranganList = [];
+  let sekolahLayer = layer_KeteranganMBG_3; // ganti sesuai nama layer kamu
 
-// Ambil semua nilai 'Keterangan' unik dari layer
-sekolahLayer.getSource().forEachFeature(function (feature) {
-  const ket = feature.get("Keterangan");
-  if (ket && !keteranganList.includes(ket)) {
-    keteranganList.push(ket);
-  }
-});
-
-// Saat user mengetik di input, munculkan hasil yang cocok
-searchBox.addEventListener("input", function () {
-  const query = this.value.toLowerCase().trim();
-  searchResults.innerHTML = "";
-
-  if (query.length === 0) return;
-
-  const filtered = keteranganList.filter(item => item.toLowerCase().includes(query));
-  filtered.forEach(item => {
-    const div = document.createElement("div");
-    div.textContent = item;
-    div.style.cursor = "pointer";
-    div.style.padding = "4px";
-    div.onclick = function () {
-      filterByKeterangan(item);
-      searchResults.innerHTML = "";
-      searchBox.value = item;
-    };
-    searchResults.appendChild(div);
-  });
-});
-
-// Fungsi filter layer berdasarkan 'Keterangan' yang dipilih
-function filterByKeterangan(value) {
+  // Ambil semua nilai 'Keterangan' unik dari layer
   sekolahLayer.getSource().forEachFeature(function (feature) {
     const ket = feature.get("Keterangan");
-    const visible = (ket === value);
-    feature.setStyle(visible ? null : new ol.style.Style({})); // hide others
+    if (ket && !keteranganList.includes(ket)) {
+      keteranganList.push(ket);
+    }
   });
-}
-        </script>
+
+  // Saat user mengetik di input, munculkan hasil yang cocok
+  searchBox.addEventListener("input", function () {
+    const query = this.value.toLowerCase().trim();
+    searchResults.innerHTML = "";
+
+    if (query.length === 0) return;
+
+    const filtered = keteranganList.filter(item => item.toLowerCase().includes(query));
+    filtered.forEach(item => {
+      const div = document.createElement("div");
+      div.textContent = item;
+      div.style.cursor = "pointer";
+      div.style.padding = "4px";
+      div.onclick = function () {
+        filterByKeterangan(item);
+        searchResults.innerHTML = "";
+        searchBox.value = item;
+      };
+      searchResults.appendChild(div);
+    });
+  });
+
+  // Fungsi filter layer berdasarkan 'Keterangan' yang dipilih
+  function filterByKeterangan(value) {
+    sekolahLayer.getSource().forEachFeature(function (feature) {
+      const ket = feature.get("Keterangan");
+      const visible = (ket === value);
+      feature.setStyle(visible ? null : new ol.style.Style({})); // hide others
+    });
+  }
+</script>
     </body>
 </html>
