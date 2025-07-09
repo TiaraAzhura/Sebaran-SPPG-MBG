@@ -48,6 +48,10 @@
         <title></title>
     </head>
     <body>
+
+<input id="searchSPPG" type="text" placeholder="Cari NAMA SPPG..."
+style="position:absolute;top:10px;left:50px;z-index:1000;padding:6px;width:250px;" />
+
         <div id="map">
             <div id="popup" class="ol-popup">
                 <a href="#" id="popup-closer" class="ol-popup-closer"></a>
@@ -68,5 +72,25 @@
         <script src="./layers/layers.js" type="text/javascript"></script> 
         <script src="./resources/Autolinker.min.js"></script>
         <script src="./resources/qgis2web.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const searchInput = document.getElementById("searchSPPG");
+  const layers = [layer_BufferMBG_2, layer_KeteranganMBG_3, layer_SPPGMBG_4];
+
+  searchInput.addEventListener("input", function () {
+    const keyword = searchInput.value.toLowerCase();
+
+    layers.forEach(layer => {
+      layer.getSource().getFeatures().forEach(feature => {
+        const nama = feature.get("NAMA SPPG");
+        const match = nama && nama.toLowerCase().includes(keyword);
+        feature.setStyle(match || !keyword ? null : new ol.style.Style({}));
+      });
+    });
+  });
+});
+</script>
+        
     </body>
 </html>
